@@ -30,32 +30,16 @@ class BikeCitizensApiClient:
             "device[app_version]": "n/a",
             "device[app_code]": "n/a",
         }
-        req = self.session.post(f"{self.API_BASE}/devices.json", data=data)
-        if req.ok:
-            self.config["bikecitizens"]["uuid"] = req.json()["device"]["uuid"]
-        else:
-            raise RequestException(f"Creating device: {req.text}")
-        return req.json()
-
-    # TODO: /campaigns.json
-    # TODO: devices/DEVICE_ID/sync.json
-    # TODO: push register
+        api_data = self.api_post_create_device(data)
+        self.config["bikecitizens"]["uuid"] = api_data["device"]["uuid"]
+        return api_data
 
     def login(self, login, password):
-        req = self.session.post(
-            f"{self.API_BASE}/sessions.json",
-            data={"login": login, "password": password},
-        )
-        if req.ok:
-            self.config["bikecitizens"]["api_key"] = req.json()["user"]["secret_token"]
-            self.config["bikecitizens"]["user_id"] = str(req.json()["user"]["id"])
-            self.config["bikecitizens"]["username"] = str(
-                req.json()["user"]["username"]
-            )
-        else:
-            raise RequestException(f"Error logging in: {req.text}")
-
-        return req.json()
+        user_data = self.api_post_sessions(login, password)
+        self.config["bikecitizens"]["api_key"] = user_data["user"]["secret_token"]
+        self.config["bikecitizens"]["user_id"] = str(user_data["user"]["id"])
+        self.config["bikecitizens"]["username"] = str(user_data["user"]["username"])
+        return user_data
 
     def get_user_id(self):
         return self.config["bikecitizens"].get("user_id")
@@ -66,7 +50,49 @@ class BikeCitizensApiClient:
     def is_logged_in(self):
         return self.config["bikecitizens"].get("api_key") is not None
 
-    def get_tracks(self, user_id):
+    def save_config(self, config_path):
+        configuration.save_config(config_path, self.config)
+
+    #############################
+    ######## API Methods ########
+    #############################
+
+    def api_post_create_device(self, data):
+        req = self.session.post(f"{self.API_BASE}/devices.json", data=data)
+        if not req.ok:
+            raise RequestException(f"Error creating device: {req.text}")
+        return req.json()
+
+    def api_get_campaigns(self):
+        req = self.session.get(f"{self.API_BASE}/campaigns.json")
+        if not req.ok:
+            raise RequestException(f"Error getting campaigns: {req.text}")
+        return req.json()
+
+    def api_get_device_sync(self, device_id):
+        req = self.session.get(f"{self.API_BASE}/devices/{device_id}/sync.json")
+        if not req.ok:
+            raise RequestException(f"Error getting device sync: {req.text}")
+        return req.json()
+
+    # TODO: push register
+
+    def api_get_pings_categories(self):
+        req = self.session.get(f"{self.API_BASE}/pings/categories.json")
+        if not req.ok:
+            raise RequestException(f"Error getting pings categories: {req.text}")
+        return req.json()
+
+    def api_post_sessions(self, login, password):
+        req = self.session.post(
+            f"{self.API_BASE}/sessions.json",
+            data={"login": login, "password": password},
+        )
+        if not req.ok:
+            raise RequestException(f"Error in POST to sessions.json: {req.text}")
+        return req.json()
+
+    def api_get_tracks_user(self, user_id):
         req = self.session.get(
             f"{self.API_BASE}/tracks/user/{user_id}", headers=self.__get_headers()
         )
@@ -75,7 +101,7 @@ class BikeCitizensApiClient:
 
         return req.json()
 
-    def get_track(self, track_id):
+    def api_get_track_points(self, track_id):
         req = self.session.get(
             f"{self.API_BASE}/tracks/{track_id}/points", headers=self.__get_headers()
         )
@@ -83,6 +109,3 @@ class BikeCitizensApiClient:
             raise RequestException(f"Error getting track: {req.text}")
 
         return req.json()
-
-    def save_config(self, config_path):
-        configuration.save_config(config_path, self.config)

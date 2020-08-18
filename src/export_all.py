@@ -26,13 +26,17 @@ if __name__ == "__main__":
     if user_id is None:
         user_id = client.get_user_id()
 
-    user_tracks = client.get_tracks(user_id)
+    print("Getting tracks")
+    user_tracks = client.api_get_tracks_user(user_id)
 
-    for track in user_tracks:
+    print(f"Dumping {len(user_tracks)} tracks")
+    for track in user_tracks[:5]:
         track_start_time = datetime.datetime.strptime(
             track["start_time"], "%Y-%m-%dT%H:%M:%S.%f%z"
         )
-        print(f"Dumping Track {track['id']}")
-        points = client.get_track(track["id"])
+        print(f"Dumping {track['id']}", end="\r")
+        points = client.api_get_track_points(track["id"])
         with open(os.path.join(args.out_dir, f"{track['id']}.gpx"), "w") as f:
             points2gpx(f, points, track_start_time)
+
+    print("Tracks dumped                           ")

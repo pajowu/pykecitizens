@@ -37,7 +37,7 @@ This creates a `config.ini` file which contains the login secret used by other t
 To export all tracks in you bikecitizens account as gpx files, run
 
 ```
-python src/export_all.py OUTPUT_DIRECTORY
+$ python src/export_all.py OUTPUT_DIRECTORY
 ```
 
 ### API
@@ -47,16 +47,27 @@ The only parameter needed is the path of the config file.
 If no file with that name exists, an empty config is used.
 
 ```
-client = api_client.BikeCitizensApiClient(CONFIG_FILE)
+>>> import api_client
+>>> client = api_client.BikeCitizensApiClient(CONFIG_FILE)
 ```
 
 #### Login
+
+To check if the user is currenty logged in, use the `is_logged_in` method:
+
+```
+>>> client.is_logged_in()
+False
+```
 
 To login, call the `login` method of the api client.
 The first parameter can either be the username of the email of an account.
 
 ```
-client.login(LOGIN, PASSWORD)
+>>> client.login(LOGIN, PASSWORD)
+{"user": ...}
+>>> client.is_logged_in()
+True
 ```
 
 This logins the api client temporarily.
@@ -70,8 +81,29 @@ The only parameter needed is the path of the config file.
 If no file with that name exists, a new one is created.
 
 ```
-client.save_config(CONFIG_FILE)
+>>> client.save_config(CONFIG_FILE)
 ```
+
+#### Getting user information
+
+When the user is logged in, the user data is returned by the api.
+Some of that data, especially the userid and username are save in the config file.
+You can use the `get_user_id` and `get_username`:
+
+```
+>>> client.is_logged_in()
+True
+>>> client.get_username()
+pajowu
+>>> client.get_user_id()
+123456
+```
+
+#### Methods
+
+The client contains to types of methods: some that directly talk to the api, and some that do some more.
+Those who directly talk to the api have a name of the scheme `api_REQUEST-METHOD_NAME`, where `REQUEST-METHOD` is either `post` or `get`.
+The other methods have
 
 ## Configuration
 
