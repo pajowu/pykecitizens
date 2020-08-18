@@ -34,7 +34,7 @@ This creates a `config.ini` file which contains the login secret used by other t
 
 #### Export all tracks
 
-To export all tracks in you bikecitizens account as gpx files, run
+To export all tracks in your bikecitizens account as gpx files, run
 
 ```
 $ python src/export_all.py OUTPUT_DIRECTORY
